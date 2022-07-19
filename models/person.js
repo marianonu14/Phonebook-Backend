@@ -5,16 +5,16 @@ const url = process.env.MONGO_DB_URI;
 mongoose.connect(url);
 
 const personSchema = new mongoose.Schema({
-	name: String,
-	number: Number
+  name: String,
+  number: Number
 });
 
 personSchema.set('toJSON', {
-	transform: (document, returnedObject) => {
-		returnedObject.id = returnedObject._id.toString();
-		delete returnedObject._id;
-		delete returnedObject.__v;
-	}
+  transform: (document, returnedObject) => {
+    returnedObject.id = returnedObject._id.toString();
+    delete returnedObject._id;
+    delete returnedObject.__v;
+  }
 });
 
 const Person = mongoose.model('Person', personSchema);
