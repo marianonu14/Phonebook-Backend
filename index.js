@@ -16,6 +16,18 @@ app.get('/api/persons', (request, response) => {
 	});
 });
 
+app.get('/api/persons/:id', (request, response, next) => {
+	Person.findById(request.params.id)
+		.then(person => {
+			if (person) {
+				response.json(person);
+			} else {
+				response.status(404).end();
+			}
+		})
+		.catch(error => next(error));
+});
+
 app.post('/api/persons', (request, response) => {
 	const body = request.body;
   
@@ -28,40 +40,52 @@ app.post('/api/persons', (request, response) => {
 	const person = new Person({
 		name: body.name,
 		number: body.number
-	})
+	});
 
-	person.save().then(savePerson => {
-		response.json(savePerson);
-	})
-})
+	person.save().then(savedPerson => {
+		response.json(savedPerson);
+	});
+});
 
+app.delete('/api/persons/:id', (request, response, next) => {
+	Person.findByIdAndRemove(request.params.id)
+		.then(() => {
+			response.status(204).end();
+		})
+		.catch(error => next(error));
+});
 
-// app.get('/api/persons/:id', (request, response) => {
-// 	const id = Number(request.params.id);
-// 	const person = Person.find(person => person.id === id);
-// 	if (person) {
-// 		response.json(person);
-// 	} else {
-// 		response.status(404).end();
-// 	}
-// });
-
-// app.delete('/api/persons/:id', (request, response) => {
-// 	const id = Number(request.params.id);
-// 	persons = persons.filter(person => person.id !== id);
-// 	console.log(persons);
-// 	response.status(204).end();
-// });
-
-// const generateId = () => {
-// 	const maxId = persons.length > 0
-// 		? Math.max(...persons.map(n => n.id))
-// 		: 0;
-// 	return maxId + 1;
-// };
+app.put('/api/persons/:id', (request, response, next) => {
+	const body = request.body;
   
+	const newPerson = {
+		name: body.name,
+		number: body.number,
+	};
   
-const PORT = process.env.PORT || 3001;
+	Person.findByIdAndUpdate(request.params.id, newPerson, { new: true })
+		.then(updatedNote => {
+			response.json(updatedNote);
+		})
+		.catch(error => next(error));
+});
+
+app.use((request, response, next) => {
+	response.status(404).end();
+});
+
+app.use((error, request, response, next) => {
+	console.error(error.message);
+  
+	if (error.name === 'CastError') {
+		return response.status(400).send({ error: 'malformatted id' });
+	} 
+  
+	next(error);
+});
+
+  
+const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`);
